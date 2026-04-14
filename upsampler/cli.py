@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import argparse
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 DEFAULT_MODEL_ID = "caidas/swin2SR-realworld-sr-x4-64-bsrgan-psnr"
+MAX_UPSAMPLING_PASSES = 16
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -33,7 +33,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-@lru_cache(maxsize=4)
 def _load_model(model_id: str) -> tuple[Any, Any, Any]:
     import torch
     from transformers import AutoImageProcessor, Swin2SRForImageSuperResolution
@@ -81,7 +80,6 @@ def upsample_image(input_path: Path, output_path: Path, factor: float, model_id:
     target_height = max(1, round(image.height * factor))
 
     result = image
-    max_passes = 16
     passes = 0
     while result.width < target_width or result.height < target_height:
         previous_size = (result.width, result.height)
@@ -92,7 +90,7 @@ def upsample_image(input_path: Path, output_path: Path, factor: float, model_id:
             raise RuntimeError(
                 "Upsampling model did not increase image size; cannot reach requested factor."
             )
-        if passes >= max_passes:
+        if passes >= MAX_UPSAMPLING_PASSES:
             raise RuntimeError("Exceeded maximum upsampling passes.")
 
     if result.width != target_width or result.height != target_height:
