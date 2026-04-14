@@ -88,10 +88,15 @@ def upsample_image(input_path: Path, output_path: Path, factor: float, model_id:
 
         if (result.width, result.height) == previous_size:
             raise RuntimeError(
-                "Upsampling model did not increase image size; cannot reach requested factor."
+                "Upsampling model did not increase image size "
+                f"(current: {result.width}x{result.height}, target: {target_width}x{target_height}); "
+                "cannot reach requested factor."
             )
         if passes >= MAX_UPSAMPLING_PASSES:
-            raise RuntimeError("Exceeded maximum upsampling passes.")
+            raise RuntimeError(
+                f"Exceeded maximum upsampling passes ({MAX_UPSAMPLING_PASSES}) "
+                f"before reaching target size {target_width}x{target_height}."
+            )
 
     if result.width != target_width or result.height != target_height:
         result = result.resize((target_width, target_height), Image.Resampling.LANCZOS)
