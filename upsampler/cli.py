@@ -63,7 +63,7 @@ def _upsample_pass(image: Any, processor: Any, model: Any, device: Any) -> Any:
 
 def upsample_image(input_path: Path, output_path: Path, factor: float, model_id: str) -> None:
     if factor <= 1:
-        raise ValueError("--factor must be greater than 1")
+        raise ValueError("factor must be greater than 1")
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input image does not exist: {input_path}")
@@ -81,8 +81,19 @@ def upsample_image(input_path: Path, output_path: Path, factor: float, model_id:
     target_height = max(1, round(image.height * factor))
 
     result = image
+    max_passes = 16
+    passes = 0
     while result.width < target_width or result.height < target_height:
+        previous_size = (result.width, result.height)
         result = _upsample_pass(result, processor, model, device)
+        passes += 1
+
+        if (result.width, result.height) == previous_size:
+            raise RuntimeError(
+                "Upsampling model did not increase image size; cannot reach requested factor."
+            )
+        if passes >= max_passes:
+            raise RuntimeError("Exceeded maximum upsampling passes.")
 
     if result.width != target_width or result.height != target_height:
         result = result.resize((target_width, target_height), Image.Resampling.LANCZOS)

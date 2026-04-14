@@ -25,6 +25,19 @@ class TestCli(unittest.TestCase):
             cli.DEFAULT_MODEL_ID,
         )
 
+    def test_upsample_image_rejects_invalid_factor(self):
+        with self.assertRaisesRegex(ValueError, "factor must be greater than 1"):
+            cli.upsample_image(Path("image.png"), Path("out.png"), 1, cli.DEFAULT_MODEL_ID)
+
+    def test_upsample_image_rejects_missing_input_file(self):
+        with self.assertRaisesRegex(FileNotFoundError, "Input image does not exist"):
+            cli.upsample_image(
+                Path("does-not-exist.png"),
+                Path("out.png"),
+                2,
+                cli.DEFAULT_MODEL_ID,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
