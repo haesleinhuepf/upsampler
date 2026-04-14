@@ -55,8 +55,8 @@ def _upsample_pass(image: Any, processor: Any, model: Any, device: Any) -> Any:
     with torch.inference_mode():
         output = model(**inputs)
 
-    reconstruction = output.reconstruction.data.squeeze().float().cpu().clamp_(0, 1)
-    data = reconstruction.permute(1, 2, 0).numpy()
+    reconstruction = output.reconstruction.data.squeeze().float().cpu()
+    data = reconstruction.permute(1, 2, 0).numpy().clip(0, 1)
     return Image.fromarray((data * 255.0).round().astype(np.uint8))
 
 
